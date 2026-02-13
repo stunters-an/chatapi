@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Global Chat</title>
+<title>Globaler Chat</title>
 
 <style>
 body {
@@ -75,67 +75,90 @@ button {
 <body>
 
 <div class="chat-container">
-  <div class="chat-header">Global Chat</div>
-
+  <div class="chat-header">Globaler Chat</div>
   <div id="messages" class="messages"></div>
-
   <div class="input-area">
-    <input id="messageInput" placeholder="Type a message..." autocomplete="off"/>
-    <button onclick="sendMessage()">Send</button>
+    <input id="messageInput" placeholder="Gib eine Nachricht ein..." autocomplete="off"/>
+    <button onclick="sendeNachricht()">Senden</button>
   </div>
 </div>
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
-const socket = io("https://YOUR_RENDER_URL"); // ← replace this
-
-let username = prompt("Enter username:");
-if (!username || username.trim() === "") {
-  username = "Guest" + Math.floor(Math.random() * 1000);
-}
-
-socket.emit("setUsername", username);
+const RENDER_URL = "https://chatapi-ajoi.onrender.com"; // Render-Backend
 
 const messagesDiv = document.getElementById("messages");
 const input = document.getElementById("messageInput");
 
-socket.on("message", (data) => {
-  const msg = document.createElement("div");
-  msg.classList.add("message");
-
-  msg.innerHTML = "<span class='username'>" + 
-                  data.user + 
-                  ":</span> " + 
-                  escapeHTML(data.text);
-
-  messagesDiv.appendChild(msg);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
-});
-
-function sendMessage() {
-  const text = input.value.trim();
-  if (!text) return;
-
-  socket.emit("sendMessage", text);
-  input.value = "";
+// Server aufwecken
+function weckeServer(versuch = 0) {
+  fetch(RENDER_URL)
+    .then(() => {
+      console.log("Render-Server ist wach");
+      starteChat();
+    })
+    .catch(() => {
+      if (versuch < 5) {
+        console.log("Erneuter Versuch in 2 Sekunden...");
+        setTimeout(() => weckeServer(versuch + 1), 2000);
+      } else {
+        alert("Der Server reagiert zu langsam. Bitte versuche es später erneut.");
+      }
+    });
 }
 
-input.addEventListener("keypress", function(e) {
-  if (e.key === "Enter") sendMessage();
-});
+weckeServer();
 
-function escapeHTML(text) {
-  return text.replace(/[&<>"']/g, function(m) {
-    return ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;'
-    })[m];
+// Chat starten
+function starteChat() {
+  const socket = io(RENDER_URL);
+
+  let benutzername = prompt("Bitte wähle deinen Benutzernamen:") || "Gast" + Math.floor(Math.random() * 1000);
+  socket.emit("setUsername", benutzername);
+
+  socket.on("message", (data) => {
+    const msg = document.createElement("div");
+    msg.classList.add("message");
+    
+    // Systemnachrichten auf Deutsch anpassen
+    let text = data.text;
+    if (data.user === "System") {
+      if (text.includes("joined")) text = text.replace("joined", "ist dem Chat beigetreten");
+      if (text.includes("left")) text = text.replace("left", "hat den Chat verlassen");
+    }
+
+    msg.innerHTML = "<span class='username'>" + escapeHTML(data.user) + ":</span> " + escapeHTML(text);
+    messagesDiv.appendChild(msg);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
   });
+
+  function sendeNachricht() {
+    const text = input.value.trim();
+    if (!text) return;
+    socket.emit("sendMessage", text);
+    input.value = "";
+  }
+
+  window.sendeNachricht = sendeNachricht; // Button global verfügbar
+
+  input.addEventListener("keypress", function(e) {
+    if (e.key === "Enter") sendeNachricht();
+  });
+
+  function escapeHTML(text) {
+    return text.replace(/[&<>"']/g, function(m) {
+      return ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      })[m];
+    });
+  }
 }
 </script>
 
 </body>
 </html>
+
