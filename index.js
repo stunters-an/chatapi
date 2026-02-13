@@ -81,6 +81,7 @@ input, button {padding:8px;margin:5px;border-radius:5px;border:none;}
   <div class="input-area">
     <input id="messageInput" placeholder="Gib eine Nachricht ein..." autocomplete="off"/>
     <button id="sendBtn">Senden</button>
+    <button id="reconnectBtn">Verbinden</button>
   </div>
 </div>
 
@@ -97,6 +98,7 @@ const startBtn = document.getElementById("startBtn");
 const messagesDiv = document.getElementById("messages");
 const messageInput = document.getElementById("messageInput");
 const sendBtn = document.getElementById("sendBtn");
+const reconnectBtn = document.getElementById("reconnectBtn");
 
 let username = "";
 
@@ -110,6 +112,20 @@ startBtn.addEventListener("click", () => {
 
   loginDiv.style.display = "none";
   chatDiv.style.display = "flex";
+
+  socket.emit("setUsername", username);
+});
+
+reconnectBtn.addEventListener("click", () => {
+  if (socket.connected) {
+    socket.disconnect();
+  }
+
+  // Recreate socket
+  socket.io.opts.transports = ["websocket"]; // force websocket
+  socket.io.opts.upgrade = false;
+
+  socket.connect();
 
   socket.emit("setUsername", username);
 });
@@ -154,5 +170,6 @@ function escapeHTML(text) {
 // --- Start server ---
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server läuft auf Port ${PORT}`));
+
 
 
