@@ -23,7 +23,7 @@ io.on("connection", (socket) => {
     if (!username) username = "Gast" + Math.floor(Math.random() * 1000);
     users[socket.id] = username;
 
-    io.emit("message", { user: "System", text: `${username} joined the chat` });
+    io.emit("message", { user: "System", text: `${username} ist dem Chat beigetreten` });
   });
 
   // Broadcast message to everyone
@@ -38,7 +38,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     const username = users[socket.id];
     if (username) {
-      io.emit("message", { user: "System", text: `${username} left the chat` });
+      io.emit("message", { user: "System", text: `${username} hat den Chat verlassen` });
       delete users[socket.id];
     }
     console.log("Disconnected:", socket.id);
@@ -51,7 +51,7 @@ app.get("/", (req, res) => {
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Globaler Chat</title>
+<title>Memepost</title>
 <style>
 body {margin:0;font-family:Arial,sans-serif;background:#1e1e1e;color:white;display:flex;justify-content:center;align-items:center;height:100vh;flex-direction:column;}
 #login {display:flex;flex-direction:column;align-items:center;}
@@ -75,7 +75,7 @@ input, button {padding:8px;margin:5px;border-radius:5px;border:none;}
 </div>
 
 <div class="chat-container" id="chat">
-  <div class="chat-header">Globaler Chat</div>
+  <div class="chat-header">Memepost</div>
   <div id="messages" class="messages"></div>
   <div class="input-area">
     <input id="messageInput" placeholder="Gib eine Nachricht ein..." autocomplete="off"/>
@@ -150,3 +150,4 @@ function escapeHTML(text) {
 // --- Start server ---
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server läuft auf Port ${PORT}`));
+
