@@ -8,7 +8,8 @@ app.use(cors());
 
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*" }
+  cors: { origin: "*" },
+  transports: ["websocket"]
 });
 
 const users = {}; // socket.id -> username
@@ -85,7 +86,10 @@ input, button {padding:8px;margin:5px;border-radius:5px;border:none;}
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
-const socket = io();
+const socket = io({
+  transports: ["websocket"],
+  upgrade: false
+});
 const loginDiv = document.getElementById("login");
 const chatDiv = document.getElementById("chat");
 const usernameInput = document.getElementById("usernameInput");
@@ -150,4 +154,5 @@ function escapeHTML(text) {
 // --- Start server ---
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server läuft auf Port ${PORT}`));
+
 
